@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // ! Warning: Do not use in production
 app.use(cors({
@@ -24,22 +24,42 @@ async function run() {
         await client.connect();
         const serviceCollection = client.db("cleanCo").collection("service")
 
+        // ==================================Read/Get==========================>>
+
         app.get('/service', async (req, res) => {
             const services = await serviceCollection.find({}).toArray();
             res.send(services)
         })
 
+        // ==================================Create/Post==========================>>
+
         app.post('/add-service', async (req, res) => {
-            /* try{
-               const data = req.body;
-               const result = await serviceCollection.insertOne(data);
-               res.send({status:true, result: result})
-            }catch(error){
-                res.send({status: false, error})
-            } */
 
             const data = req.body;
             const result = await serviceCollection.insertOne(data);
+            res.send(result)
+        })
+
+        // ==================================Update/put==========================>>
+
+        app.put("/update-service/:id", async(req, res)=>{
+            const {id} = req.params;
+            const data = req.body;
+            const filter = {_id: ObjectId(id)};
+            const updateDoc ={
+                $set: data
+            }
+            const option = {upsert: true};
+            const result = await serviceCollection.updateOne(filter, updateDoc, option);
+            res.send(result)
+ 
+        })
+        // ==================================Delete==========================>>
+
+        app.delete("/update-service/:id", async(req, res)=>{
+            const {id} = req.params;
+            const query = {_id: ObjectId(id)};
+            const result = await serviceCollection.deleteOne(query);
             res.send(result)
         })
 
